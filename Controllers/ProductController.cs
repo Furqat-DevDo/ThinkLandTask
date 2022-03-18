@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ThinkLand.DAL.IConfiguration;
 using ThinkLand.Mappers;
 
@@ -8,6 +9,7 @@ namespace ThinkLand.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly ILogger<ProductController> _logger;

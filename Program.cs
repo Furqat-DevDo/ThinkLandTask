@@ -1,13 +1,13 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using ThinkLand.DAL.Data;
+using ThinkLand.DAL.IConfiguration;
 using ThinkLand.DAL.Interfaces;
 using ThinkLand.DAL.Repositories;
-using ThinkLand.DAL.IConfiguration;
-using ThinkLand.DAL.Data;
-using Jose;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.OpenApi.Models;
+using ThinkLand.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,9 +19,11 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUnitofWork, UnitOfWork>();
 
 
-builder.Services.AddDbContext<AppDBContext>(options 
+builder.Services.AddDbContext<AppDBContext>(options
 => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtKeys"));
 
+builder.Services.AddSingleton<JwtService>();
 builder.Services.AddControllers();
 
 var securityScheme = new OpenApiSecurityScheme()
@@ -49,31 +51,16 @@ var securityReq = new OpenApiSecurityRequirement()
     }
 };
 
-var contact = new OpenApiContact()
-{
-    Name = "furqat",
-    Email = "furqat@gmail.com",
-    Url = new Uri("http://www.furqat.com")
-};
-
-var license = new OpenApiLicense()
-{
-    Name = "Free License",
-    Url = new Uri("http://www.furqat.com")
-};
 
 var info = new OpenApiInfo()
 {
     Version = "v1",
     Title = "Thinkland Task",
     Description = "Implementing JWT Authentication with Product Api",
-    TermsOfService = new Uri("http://www.example.com"),
-    Contact = contact,
-    License = license
+    TermsOfService = new Uri("http://www.ilmhub.uz")
 };
 
 
-// Add JWT configuration
 builder.Services.AddAuthentication(o =>
 {
     o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -102,6 +89,7 @@ builder.Services.AddSwaggerGen(o =>
     o.AddSecurityDefinition("Bearer", securityScheme);
     o.AddSecurityRequirement(securityReq);
 });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

@@ -1,17 +1,17 @@
-using ThinkLand.Data;
+using Microsoft.EntityFrameworkCore;
+using ThinkLand.DAL.Interfaces;
+using ThinkLand.DAL.Data;
 using ThinkLand.DTO;
 
-namespace ThinkLand.Service
+namespace ThinkLand.DAL.Repositories
 {
-    public class CategoryService : ICategoryService
+    public class CategoryRepository  : GenericRepository<Category>, ICategoryRepository
     {
         private readonly AppDBContext _dbctxt;
+        public CategoryRepository(AppDBContext dbcontext, ILogger logger) : base(dbcontext, logger) 
+        { _dbctxt = dbcontext; }
 
-        public CategoryService(AppDBContext dbcontext)
-        {
-            _dbctxt=dbcontext;
-        }
-         public async Task<(bool IsSuccess, Exception Exception, Category Category)> CreateAsync(Category Category)
+        public override async Task<(bool IsSuccess, Exception Exception, Category entity)> Add(Category Category)
         {
             if (await ExistsAsync(Category.ID))
             {
@@ -31,35 +31,35 @@ namespace ThinkLand.Service
             }
         }
 
-        public async Task<(bool IsSuccess, Exception Exception)> DeleteAsync(Guid id)
+        public override async Task<(bool IsSuccess, Exception Exception)> Delete(Guid id)
         {
             if (!await ExistsAsync(id))
             {
                 return (false, new ArgumentException($"There is no Category with given ID: {id}"));
             }
 
-            _dbctxt.categories.Remove(await GetAsync(id));
+            _dbctxt.categories.Remove(await GetById(id));
             await _dbctxt.SaveChangesAsync();
 
             return (true, null);
         }
 
-        public Task<bool> ExistsAsync(Guid id)
-          => _dbctxt.categories
+        public async override Task<bool> ExistsAsync(Guid id)
+          => await _dbctxt.categories
         .AnyAsync(p => p.ID == id);
 
-        public Task<List<Category>> GetAllAsync()
-         => _dbctxt.categories
+        public override async Task<List<Category>> All()
+         => await _dbctxt.categories
         .AsNoTracking()
         .ToListAsync();
 
-        public Task<Category> GetAsync(Guid id)
-         => _dbctxt.categories
+        public override async Task<Category> GetById(Guid id)
+         => await _dbctxt.categories
         .AsNoTracking()
         .Where(p => p.ID == id)
         .FirstOrDefaultAsync();
 
-        public async Task<(bool IsSuccess, Exception Exception, Category Category)> UpdateAsync(Category Category)
+        public override async Task<(bool IsSuccess, Exception Exception, Category entity)> Update(Category Category)
         {
             if (!await ExistsAsync(Category.ID))
             {
